@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,6 +13,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/Saumajitt/threatLog/internal/api"
+	"github.com/Saumajitt/threatLog/internal/api/handler"
 	"github.com/Saumajitt/threatLog/internal/config"
 	"github.com/Saumajitt/threatLog/internal/repository"
 	"github.com/Saumajitt/threatLog/internal/service"
@@ -31,7 +34,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to load configuration")
 	}
 
-	log.Info().Interface("config", cfg).Msg("Configuration loaded")
+	log.Info().Msg("Configuration loaded")
 
 	// Initialize PostgreSQL
 	pgPool, err := initPostgres(cfg.Postgres)
@@ -76,23 +79,50 @@ func main() {
 	queryService := service.NewQueryService(pgRepo, redisRepo, cfg.Cache.QueryCacheEnabled)
 	metricsService := service.NewMetricsService()
 
-	log.Info().
-		Interface("ingestion_service", ingestionService).
-		Interface("query_service", queryService).
-		Interface("metrics_service", metricsService).
-		Msg("Services initialized")
+	// Initialize handlers
+	ingestHandler := handler.NewIngestHandler(ingestionService, metricsService)
+	queryHandler := handler.NewQueryHandler(queryService, metricsService)
+	metricsHandler := handler.NewMetricsHandler(metricsService)
+	healthHandler := handler.NewHealthHandler(pgRepo, redisRepo)
 
-	// TODO: Initialize HTTP server (Phase 6)
-	log.Info().Msg("HTTP server initialization coming in Phase 6...")
+	// Setup router
+	router := api.NewRouter(ingestHandler, queryHandler, metricsHandler, healthHandler)
+	r := router.Setup()
+
+	// Create HTTP server
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", cfg.Server.Port),
+		Handler:      r,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+	}
+
+	// Start server in goroutine
+	go func() {
+		log.Info().Int("port", cfg.Server.Port).Msg("HTTP server starting")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal().Err(err).Msg("HTTP server failed")
+		}
+	}()
+
+	log.Info().Msg("ThreatLog is running. Press Ctrl+C to stop.")
 
 	// Wait for interrupt signal
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
-
-	log.Info().Msg("ThreatLog is running. Press Ctrl+C to stop.")
 	<-sigChan
 
 	log.Info().Msg("Shutting down gracefully...")
+
+	// Shutdown HTTP server
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
+	defer cancel()
+
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		log.Error().Err(err).Msg("HTTP server shutdown error")
+	}
+
+	log.Info().Msg("Shutdown complete")
 }
 
 func initPostgres(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
@@ -113,7 +143,6 @@ func initPostgres(cfg config.PostgresConfig) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("failed to create pool: %w", err)
 	}
 
-	// Test connection
 	if err := pool.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
