@@ -21,9 +21,9 @@ A high-performance, production-grade log ingestion and analysis system built in 
 ┌─────────────────────────────────────┐
 │     HTTP API Server (Chi Router)    │
 │  ┌────────────────────────────────┐ │
-│  │  Ingestion Handler              │ │
-│  │  Query Handler                  │ │
-│  │  Metrics Handler                │ │
+│  │  Ingestion Handler             │ │
+│  │  Query Handler                 │ │
+│  │  Metrics Handler               │ │
 │  └────────────┬───────────────────┘ │
 └───────────────┼─────────────────────┘
                 │
@@ -31,7 +31,8 @@ A high-performance, production-grade log ingestion and analysis system built in 
     │                       │
     ▼                       ▼
 ┌─────────────┐       ┌────────────┐
-│ Worker Pool │       │Query Service│
+│ Worker Pool │       │   Query    |
+|             |       |  Service   │
 │ (10 workers)│       │  + Cache   │
 └──────┬──────┘       └─────┬──────┘
        │                    │
