@@ -380,32 +380,3 @@ func (r *RedisRepository) generateCacheKey(req QueryRequest) string {
 | **Max Latency** | <200ms |
 | **Success Rate** | 100% at target load |
 
----
-
-## 🎤 Interview Questions & Answers
-
-### "Why did you choose Go for this project?"
-
-> "Go is ideal for high-performance network services. Its goroutines make concurrent programming simple, and the compiled binary has no runtime dependencies - perfect for containers. Companies like Uber, Dropbox, and Cloudflare use Go for similar log processing systems."
-
-### "How does your system handle high load?"
-
-> "Three mechanisms: (1) Buffered channel absorbs traffic spikes, (2) Worker pool processes logs asynchronously so HTTP responses are instant, (3) Batch processing reduces database round trips by 100x."
-
-### "What happens if the server crashes?"
-
-> "In-flight logs in the buffer would be lost. For production, I'd add a message queue like Kafka or RabbitMQ for durability. The current design prioritizes throughput for this resume project."
-
-### "How would you scale this horizontally?"
-
-> "The stateless design allows horizontal scaling. Run multiple instances behind a load balancer. The only shared state is in PostgreSQL and Redis, which both support clustering."
-
-### "What would you improve?"
-
-> "Three things: (1) Add Kafka for durability, (2) Implement sharding for time-series data, (3) Add Prometheus metrics for observability. The architecture already supports these additions."
-
----
-
-## 🏆 Resume Line
-
-> Built a **distributed log ingestion system** in Go processing **900+ events/second** with **<6ms latency**, featuring a **worker pool pattern**, **hot/cold storage architecture** (Redis + PostgreSQL), and **batch processing** for optimal throughput.

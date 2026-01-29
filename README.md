@@ -257,14 +257,6 @@ cache:
 - **Query Latency** (uncached): <500ms (p95)
 - **Concurrent Connections**: 1000+
 
-## 🏆 Resume Highlights
-
-- Built a **distributed log ingestion system** processing **10K+ events/second**
-- Implemented **worker pool pattern** with Go channels for **concurrent processing**
-- Designed **hot/cold storage architecture** using **Redis** and **PostgreSQL**
-- Achieved **5x query performance improvement** with strategic caching
-- **70%+ test coverage** with unit and integration tests
-- Production-ready with **graceful shutdown**, **health checks**, and **observability**
 
 ## 📝 License
 
@@ -272,4 +264,4 @@ MIT License
 
 ## 👤 Author
 
-Your Name - [GitHub](https://github.com/yourusername)
+Saumajit Malakar - [GitHub](https://github.com/Saumajitt)
