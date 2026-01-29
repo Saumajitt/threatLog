@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/Saumajitt/threatLog/internal/model"
+	"github.com/redis/go-redis/v9"
 )
 
 type RedisRepository struct {
@@ -26,7 +26,7 @@ func NewRedisRepository(client *redis.Client, ttl time.Duration) *RedisRepositor
 // CacheQueryResult caches query results
 func (r *RedisRepository) CacheQueryResult(ctx context.Context, req model.QueryRequest, result model.QueryResponse) error {
 	key := r.generateCacheKey(req)
-	
+
 	data, err := json.Marshal(result)
 	if err != nil {
 		return fmt.Errorf("failed to marshal result: %w", err)
@@ -38,7 +38,7 @@ func (r *RedisRepository) CacheQueryResult(ctx context.Context, req model.QueryR
 // GetCachedQueryResult retrieves cached query results
 func (r *RedisRepository) GetCachedQueryResult(ctx context.Context, req model.QueryRequest) (*model.QueryResponse, error) {
 	key := r.generateCacheKey(req)
-	
+
 	data, err := r.client.Get(ctx, key).Bytes()
 	if err == redis.Nil {
 		return nil, nil // Cache miss
@@ -81,7 +81,7 @@ func (r *RedisRepository) generateCacheKey(req model.QueryRequest) string {
 		req.Limit,
 		req.Offset,
 	)
-	
+
 	hash := sha256.Sum256([]byte(data))
 	return fmt.Sprintf("logs:query:%x", hash)
 }
