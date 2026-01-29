@@ -1,0 +1,32 @@
+server:
+  port: 8080
+  read_timeout: 10s
+  write_timeout: 10s
+  shutdown_timeout: 30s
+
+postgres:
+  host: localhost
+  port: 5432
+  database: threatlog
+  user: postgres
+  password: postgres
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 5m
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 10
+
+ingestion:
+  worker_count: 10
+  buffer_size: 10000
+  batch_size: 100
+  batch_timeout: 1s
+
+cache:
+  ttl: 5m
+  query_cache_enabled: true
